@@ -615,7 +615,7 @@ class KnobScripter(QtWidgets.QDialog):
             reply = msgBox.exec_()
             if reply == QtWidgets.QMessageBox.No:
                 return
-        self.node[dropdown_value].setValue(edited_knobValue.encode("utf8"))
+        self.node[dropdown_value].setValue(edited_knobValue)
         self.setKnobModified(modified = False, knob = dropdown_value, changeTitle = True)
         nuke.tcl("modified 1")
         if self.knob in self.unsavedKnobs:
@@ -828,17 +828,17 @@ class KnobScripter(QtWidgets.QDialog):
                 os.makedirs(folder_path)
                 return True
             except:
-                print "Couldn't create the scripting folders.\nPlease check your OS write permissions."
+                print ("Couldn't create the scripting folders.\nPlease check your OS write permissions.")
                 return False
 
     def makeScriptFile(self, name = "Untitled.py", folder = "scripts", empty = True):
         script_path = os.path.join(self.scripts_dir, self.current_folder, name)
         if not os.path.isfile(script_path):
             try:
-                self.current_script_file = open(script_path, 'w')
+                self.current_script_file = open(script_path, 'w', encoding='utf-8')
                 return True
             except:
-                print "Couldn't create the scripting folders.\nPlease check your OS write permissions."
+                print ("Couldn't create the scripting folders.\nPlease check your OS write permissions.")
                 return False
 
     def setCurrentFolder(self, folderName):
@@ -880,7 +880,7 @@ class KnobScripter(QtWidgets.QDialog):
         # 1: If autosave exists and pyOnly is false, load it
         if os.path.isfile(script_path_temp) and not pyOnly:
             log("Loading .py.autosave file\n---")
-            with open(script_path_temp, 'r') as script:
+            with open(script_path_temp, 'r', encoding='utf-8') as script:
                 content = script.read()
             self.script_editor.setPlainText(content)
             self.setScriptModified(True)
@@ -889,7 +889,7 @@ class KnobScripter(QtWidgets.QDialog):
         # 2: Try to load the .py as first priority, if it exists
         elif os.path.isfile(script_path):
             log("Loading .py file\n---")
-            with open(script_path, 'r') as script:
+            with open(script_path, 'r', encoding='utf-8') as script:
                 content = script.read()
             current_text = self.script_editor.toPlainText().encode("utf8")
             if check and current_text != content and current_text.strip() != "":
@@ -916,7 +916,7 @@ class KnobScripter(QtWidgets.QDialog):
 
         # 3: If .py doesn't exist... only then stick to the autosave
         elif os.path.isfile(script_path_temp):
-            with open(script_path_temp, 'r') as script:
+            with open(script_path_temp, 'r', encoding='utf-8') as script:
                 content = script.read()
 
             msgBox = QtWidgets.QMessageBox()
@@ -960,17 +960,17 @@ class KnobScripter(QtWidgets.QDialog):
         script_path = os.path.join(self.scripts_dir, self.current_folder, self.current_script)
         script_path_temp = script_path + ".autosave"
         orig_content = ""
-        content = self.script_editor.toPlainText().encode('utf8')
+        content = self.script_editor.toPlainText()
 
         if temp == True:
             if os.path.isfile(script_path):
-                with open(script_path, 'r') as script:
+                with open(script_path, 'r', encoding='utf-8') as script:
                     orig_content = script.read()
             elif content == "" and os.path.isfile(script_path_temp): #If script path doesn't exist and autosave does but the script is empty...
                 os.remove(script_path_temp)
                 return
             if content != orig_content:
-                with open(script_path_temp, 'w') as script:
+                with open(script_path_temp, 'w', encoding='utf-8') as script:
                     script.write(content)
             else:
                 if os.path.isfile(script_path_temp):
@@ -978,8 +978,8 @@ class KnobScripter(QtWidgets.QDialog):
                 log("Nothing to save")
                 return
         else:
-            with open(script_path, 'w') as script:
-                script.write(self.script_editor.toPlainText().encode('utf8'))
+            with open(script_path, 'w', encoding='utf-8') as script:
+                script.write(self.script_editor.toPlainText())
             # Clear trash
             if os.path.isfile(script_path_temp):
                 os.remove(script_path_temp)
@@ -1244,7 +1244,7 @@ class KnobScripter(QtWidgets.QDialog):
         if not os.path.isfile(self.state_txt_path):
             return False
         else:
-            with open(self.state_txt_path, "r") as f:
+            with open(self.state_txt_path, "r", encoding='utf-8') as f:
                 self.state_dict = json.load(f)
 
         
@@ -1313,7 +1313,7 @@ class KnobScripter(QtWidgets.QDialog):
         self.state_dict['splitter_sizes'] = self.splitter.sizes()
 
 
-        with open(self.state_txt_path,"w") as f:
+        with open(self.state_txt_path,"w", encoding='utf-8') as f:
             state = json.dump(self.state_dict, f, sort_keys=True, indent=4)
         return state
 
@@ -1347,7 +1347,7 @@ class KnobScripter(QtWidgets.QDialog):
     def changeClicked(self, newNode=""):
         ''' Change node '''
         try:
-            print "Changing from " + self.node.name()
+            print ("Changing from " + self.node.name())
         except:
             self.node = None
             if not len(nuke.selectedNodes()):
@@ -1440,7 +1440,7 @@ class KnobScripter(QtWidgets.QDialog):
         self.setScriptState()
 
     def clearConsole(self):
-        self.origConsoleText = self.nukeSEOutput.document().toPlainText().encode("utf8")
+        self.origConsoleText = self.nukeSEOutput.document().toPlainText()
         self.script_output.setPlainText("")
 
     def toggleFRW(self, frw_pressed):
@@ -1478,7 +1478,7 @@ class KnobScripter(QtWidgets.QDialog):
             return {}
         else:
             loaded_snippets = {}
-            with open(path, "r") as f:
+            with open(path, "r", encoding='utf-8') as f:
                 file = json.load(f)
                 for i, (key, val) in enumerate(file.items()):
                     if re.match(r"\[custom-path-[0-9]+\]$",key):
@@ -1518,7 +1518,7 @@ class KnobScripter(QtWidgets.QDialog):
         if not os.path.isfile(self.prefs_txt):
             return []
         else:
-            with open(self.prefs_txt, "r") as f:
+            with open(self.prefs_txt, "r", encoding='utf-8') as f:
                 prefs = json.load(f)
                 return prefs
 
@@ -1567,14 +1567,14 @@ class KnobScripter(QtWidgets.QDialog):
     def refreshClicked(self):
         ''' Function to refresh the dropdowns '''
         if self.nodeMode:
-            knob = self.current_knob_dropdown.itemData(self.current_knob_dropdown.currentIndex()).encode('UTF8')
+            knob = self.current_knob_dropdown.itemData(self.current_knob_dropdown.currentIndex())
             self.current_knob_dropdown.blockSignals(True)
             self.current_knob_dropdown.clear() # First remove all items
             self.updateKnobDropdown()
             availableKnobs = []
             for i in range(self.current_knob_dropdown.count()):
                 if self.current_knob_dropdown.itemData(i) is not None:
-                    availableKnobs.append(self.current_knob_dropdown.itemData(i).encode('UTF8'))
+                    availableKnobs.append(self.current_knob_dropdown.itemData(i))
             if knob in availableKnobs:
                 self.setCurrentKnob(knob)
             self.current_knob_dropdown.blockSignals(False)
@@ -1652,7 +1652,7 @@ class KnobScripter(QtWidgets.QDialog):
     def setSEOutputEvent(self):
         se = self.findSE()
         se_output = self.findSEOutput(se)
-        self.origConsoleText = se_output.document().toPlainText().encode('utf8')
+        self.origConsoleText = se_output.document().toPlainText()
         se_output.textChanged.connect(partial(consoleChanged, se_output, self))
         consoleChanged(se_output, self)
 
@@ -1678,7 +1678,7 @@ def consoleChanged(self, ks):
     try:
         if ks: # KS exists
             ksOutput = ks.script_output # The console TextEdit widget
-            ksText = self.document().toPlainText().encode("utf8")
+            ksText = self.document().toPlainText()
             origConsoleText = ks.origConsoleText # The text from the console that will be omitted
             if ksText.startswith(origConsoleText):
                 ksText = ksText[len(origConsoleText):]
@@ -3427,7 +3427,7 @@ class KnobScripterPrefs(QtWidgets.QDialog):
         self.knobScripter.runInContextAct.setChecked(self.contextDefaultValue())
         self.knobScripter.tabSpaces = self.tabSpaceValue()
         self.knobScripter.script_editor.tabSpaces = self.tabSpaceValue()
-        with open(self.prefs_txt,"w") as f:
+        with open(self.prefs_txt,"w", encoding='utf-8') as f:
             prefs = json.dump(ks_prefs, f, sort_keys=True, indent=4)
         self.accept()
         self.knobScripter.highlighter.rehighlight()
@@ -3831,7 +3831,7 @@ class SnippetsPanel(QtWidgets.QDialog):
         if not os.path.isfile(self.snippets_txt_path):
             return {}
         else:
-            with open(self.snippets_txt_path, "r") as f:
+            with open(self.snippets_txt_path, "r", encoding='utf-8') as f:
                 self.snippets = json.load(f)
                 return self.snippets
 
@@ -3856,7 +3856,7 @@ class SnippetsPanel(QtWidgets.QDialog):
     def saveSnippets(self,snippets = ""):
         if snippets == "":
             snippets = self.getSnippetsAsDict()
-        with open(self.snippets_txt_path,"w") as f:
+        with open(self.snippets_txt_path,"w", encoding='utf-8') as f:
             prefs = json.dump(snippets, f, sort_keys=True, indent=4)
         return prefs
 
